@@ -1,0 +1,38 @@
+{
+    "variables": {
+        "project_id": "",
+        "source_image_family": "",
+        "machine_type": "",
+        "network": "default",
+        "tags": "https"
+      },
+    "builders": [
+        {
+            "type": "googlecompute",
+            "project_id": "{{user `project_id`}}",
+            "image_name": "reddit-full-{{timestamp}}",
+            "image_description": "Reddit-base image for reddit-app built on {{timestamp}}",
+            "image_family": "reddit-full",
+            "source_image_family": "{{user `source_image_family`}}",
+            "zone": "europe-west3-c",
+            "ssh_username": "appuser",
+            "machine_type": "{{user `machine_type`}}",
+            "disk_size": 10,
+            "disk_type": "pd-standard",            
+            "network": "{{user `network`}}",
+            "tags": "{{user `tags`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "files/puma.service",
+            "destination": "/tmp/puma.service"
+        },
+        {
+            "type": "shell",
+            "script": "files/deploy.sh",
+            "execute_command": "sudo {{.Path}}"
+        }        
+    ]
+}
