@@ -1,0 +1,18 @@
+[Unit]
+Description=Puma
+After=syslog.target
+After=network.target
+After=mongodb.service
+Requires=mongod.service
+
+[Service]
+Type=forking
+WorkingDirectory=/var/www/reddit
+User=appuser
+Group=appuser
+ExecStart=/usr/local/bin/puma -d
+TimeoutSec=300
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 

@@ -1,0 +1,7 @@
+{
+    "project_id": "infra-12345",
+    "source_image_family": "ubuntu-1804-lts",
+    "machine_type": "f1-micro"
+    "network": "net",
+    "tags": "http, https"
+}
