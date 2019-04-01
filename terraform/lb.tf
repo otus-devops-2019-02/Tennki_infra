@@ -6,14 +6,15 @@ resource "google_compute_global_address" "lb-ip" {
 # Создаем группу инстансов 
 resource "google_compute_instance_group" "reddit-app-group" {
   name = "reddit-app-group"
+
   # Указываем ВМ, которые будет входить в группу
   instances = [
     "${google_compute_instance.app.self_link}",
     "${google_compute_instance.app-pool.*.self_link}",
-     
   ]
 
   zone = "${var.zone}"
+
   # Указываем имя и порт, на котором принимают запросы наши ВМ
   named_port {
     name = "app"
@@ -45,10 +46,12 @@ resource "google_compute_url_map" "lb-url-map" {
 resource "google_compute_backend_service" "lb-backend-service" {
   name      = "lb-backend-service"
   port_name = "app"
+
   # Группа инстансов, которая обслуживает запросы
   backend {
     group = "${google_compute_instance_group.reddit-app-group.self_link}"
   }
+
   # Проверка состояния сервиса
   health_checks = ["${google_compute_health_check.lb-health-check.self_link}"]
 }
@@ -61,3 +64,4 @@ resource "google_compute_health_check" "lb-health-check" {
     port = "9292"
   }
 }
+

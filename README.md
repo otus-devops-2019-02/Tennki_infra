@@ -99,3 +99,4 @@ resource "google_compute_instance" "app-pool" {
 }
 
 Недостаток, в ручном задании количества инстансов.
+

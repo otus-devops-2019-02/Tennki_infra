@@ -73,6 +73,7 @@ resource "google_compute_instance" "app-pool" {
       image = "reddit-full"
     }
   }
+
   # определение сетевого интерфейса
   network_interface {
     # сеть, к которой присоединить данный интерфейс
@@ -80,7 +81,7 @@ resource "google_compute_instance" "app-pool" {
 
     # использовать ephemeral IP для доступа из Интернет
     access_config {}
-  }  
+  }
 }
 
 resource "google_compute_firewall" "firewall_puma" {
@@ -101,3 +102,4 @@ resource "google_compute_firewall" "firewall_puma" {
   # Правило применимо для инстансов с перечисленными тэгами
   target_tags = ["reddit-app"]
 }
+

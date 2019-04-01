@@ -4,3 +4,4 @@ private_key_path = "~/.ssh/appuser"
 disk_image = "reddit-base"
 zone = "europe-west3-a"
 worker_count = "2"
+
