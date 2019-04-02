@@ -58,3 +58,45 @@ gcloud compute firewall-rules create my-puma-server \
     --source-ranges 0.0.0.0/0 \
     --priority 1000 \
     --target-tags my-puma-server
+
+
+#Terraform
+- При применении конфигурации, внесенные вручную ssh ключи перезаписываются, сохраняются только указанные в конфигурационном файле.
+- Конфигурация балансировщика в файле lb.tf Использована сross-region балансировка.
+Сделано через global forward rule с привязкой глобального статического ip. 
+Отсутсвтует атомасштабирование. Количество инстансов задается через переменную worker_count. Созданные инстансы автоматически добавляются в инстанс-группу. 
+Можно убрать у инстансов внешние ip т.к. трафик идет через балансировщик. 
+
+- Ручное управление количеством инстансов через параметр count: 
+
+variable worker_count {
+  # Описание переменной
+  description = "Number of workers"
+  default     = "1"
+}
+
+resource "google_compute_instance" "app-pool" {
+  count        = "${var.worker_count}"
+  name         = "reddit-app-${count.index}"
+  machine_type = "g1-small"
+  zone         = "${var.zone}"
+  tags         = ["reddit-app"]
+
+  # определение загрузочного диска
+  boot_disk {
+    initialize_params {
+      image = "reddit-full"
+    }
+  }
+  # определение сетевого интерфейса
+  network_interface {
+    # сеть, к которой присоединить данный интерфейс
+    network = "default"
+
+    # использовать ephemeral IP для доступа из Интернет
+    access_config {}
+  }  
+}
+
+Недостаток, в ручном задании количества инстансов.
+
