@@ -4,10 +4,10 @@ Tennki Infra repository
 bastion_IP = 35.207.181.156
 someinternalhost_IP = 10.156.0.3
 
-#Для подключения к someinternalhost в одну команду можно выполнить:
+# Для подключения к someinternalhost в одну команду можно выполнить:
 ssh -A 35.207.181.156 -t 'ssh 10.156.0.3'
 
-#Для подключения к someinternalhost командой 'ssh  someinternalhost' можно прописать в ssh_config файл следующий конфиг:
+# Для подключения к someinternalhost командой 'ssh  someinternalhost' можно прописать в ssh_config файл следующий конфиг:
 Host bastion
     Hostname 35.207.181.156
     ForwardAgent yes
@@ -22,7 +22,7 @@ Host someinternalhost
 testapp_IP = 35.242.220.7
 testapp_port = 9292
 
-#Запауск инстанса c приложением с использованием startup script хранящимся локально
+# Запауск инстанса c приложением с использованием startup script хранящимся локально
 gcloud compute instances create reddit-app-auto\
   --boot-disk-size=10GB \
   --image-family ubuntu-1604-lts \
@@ -32,7 +32,7 @@ gcloud compute instances create reddit-app-auto\
   --restart-on-failure \
   --metadata-from-file startup-script=startup_script.sh
 
-##Запауск инстанса приложения с использованием startup script хранящимся в бакете
+# Запауск инстанса приложения с использованием startup script хранящимся в бакете
 gcloud compute instances create reddit-app-auto-url\
   --boot-disk-size=10GB \
   --image-family ubuntu-1604-lts \
@@ -43,13 +43,13 @@ gcloud compute instances create reddit-app-auto-url\
   --metadata startup-script-url=gs://tennki-sh-bucket/startup_script.sh
 
 
-#Создание бакета
+# Создание бакета
 gsutil mb -l europe-west3  gs://tennki-sh-bucket/
-#Копирование данных в бакет
+# Копирование данных в бакет
 gsutil cp startup_script.sh gs://tennki-sh-bucket
 
 
-#Создание правила брандмауэра
+# Создание правила брандмауэра
 gcloud compute firewall-rules create my-puma-server \
     --network default \
     --action allow \
@@ -60,7 +60,7 @@ gcloud compute firewall-rules create my-puma-server \
     --target-tags my-puma-server
 
 
-#Terraform
+# Terraform 1
 - При применении конфигурации, внесенные вручную ssh ключи перезаписываются, сохраняются только указанные в конфигурационном файле.
 - Конфигурация балансировщика в файле lb.tf Использована сross-region балансировка.
 Сделано через global forward rule с привязкой глобального статического ip. 
@@ -70,7 +70,6 @@ gcloud compute firewall-rules create my-puma-server \
 - Ручное управление количеством инстансов через параметр count: 
 
 variable worker_count {
-  # Описание переменной
   description = "Number of workers"
   default     = "1"
 }
@@ -81,22 +80,62 @@ resource "google_compute_instance" "app-pool" {
   machine_type = "g1-small"
   zone         = "${var.zone}"
   tags         = ["reddit-app"]
-
-  # определение загрузочного диска
   boot_disk {
     initialize_params {
       image = "reddit-full"
     }
   }
-  # определение сетевого интерфейса
-  network_interface {
-    # сеть, к которой присоединить данный интерфейс
-    network = "default"
-
-    # использовать ephemeral IP для доступа из Интернет
+  network_interface {    
+    network = "default"    
     access_config {}
   }  
 }
 
 Недостаток, в ручном задании количества инстансов.
+
+# Terraform 2
+- Хранение стейтов вынесено в бакет. Для prod и stage указаны разные префиксы. При одновременном запуске изменений ресурсов происходит блокировка стейтфайла.
+------
+  backend "gcs" {
+    bucket = "tennki-storage-bucket"
+    prefix = "prod"
+  }
+------
+  backend "gcs" {
+    bucket = "tennki-storage-bucket"
+    prefix = "stage"
+  }
+
+- Добавлена переменная env, которая передается в модули и подставляется в имена инстансов и теги., т.е. можно одновременно развернуть stage и prod. Только дополнительно надо добавить env в имена других ресурсов, чтобы они не дублировались. 
+
+- Организовано включение/выключение провиженеров через переменную enable_provisoners, которая передается в модули. При отключении провиженеров, в них поставляются команды/скрипты, которые ничего не выполняю. Варианты сделаны как элементы списка, а переменная enable_provisoners позволяет выбрать тот или иной вариант через функцию element.
+  ---app module---
+  provisioner "file" {
+    source      = "${element(list("${path.module}/files/null.sh","${path.module}/files/puma.service"),var.enable_provisioners)}"
+    destination = "/tmp/puma.service"
+  }
+  provisioner "remote-exec" {
+    inline = ["${element(list("echo","sudo sed -i '/ExecStart/iEnvironment=\"DATABASE_URL=${var.db_url}\"' /tmp/puma.service"),var.enable_provisioners)}"]
+  }
+  provisioner "remote-exec" {
+    script = "${element(list("${path.module}/files/null.sh","${path.module}/files/deploy.sh"),var.enable_provisioners)}"
+  }
+  
+  ---db module---
+  provisioner "remote-exec" {
+    inline = [
+      "${element(list("echo","sudo sed -i '/bindIp/s/^/#/g' /etc/mongod.conf"),var.enable_provisioners)}",
+      "${element(list("echo","sudo systemctl restart mongod.service"),var.enable_provisioners)}",
+    ]
+  }
+  ------
+
+- При развертывании получаем аутпут переменную db_url с внутренним адресом БД инстанса и передаем ее в инстанс с приложением. Прописываем в переменные юнита.
+  ------
+  provisioner "remote-exec" {
+    inline = ["${element(list("echo","sudo sed -i '/ExecStart/iEnvironment=\"DATABASE_URL=${var.db_url}\"' /tmp/puma.service"),var.enable_provisioners)}"]
+  }
+  ------
+
+- Правило фаервола firewall_mongo можно не создавать. Т.к. трафик идет по внутренней сети гугла и тесты показали, что никакого влияния на прохождение трафика нет. Протестировано для разных зон в одном регионе и для разных регионов. 
 
