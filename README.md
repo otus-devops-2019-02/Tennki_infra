@@ -121,6 +121,7 @@ resource "google_compute_instance" "app-pool" {
     script = "${element(list("${path.module}/files/null.sh","${path.module}/files/deploy.sh"),var.enable_provisioners)}"
   }
   
+  - Чтобы mongo стала доступна на внутреннем ip, через провиженер меняем конфиг и перезапускам сервис.
   ---db module---
   provisioner "remote-exec" {
     inline = [
@@ -139,3 +140,5 @@ resource "google_compute_instance" "app-pool" {
 
 - Правило фаервола firewall_mongo можно не создавать. Т.к. трафик идет по внутренней сети гугла и тесты показали, что никакого влияния на прохождение трафика нет. Протестировано для разных зон в одном регионе и для разных регионов. 
 
+# Ansible-1
+- При удалении директории reddit ansible видит, что необходимо привести систему в нужно состояние и клонирует репозиторий. Если директория есть, то ansible ничего не меняет.
