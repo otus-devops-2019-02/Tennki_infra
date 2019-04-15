@@ -165,3 +165,16 @@ resource "google_compute_instance" "app-pool" {
        ]
    }
 }
+- Для проверки "ansible-playbook --syntax-check clone.yml" со стороны Тревиса добавлен вывод "пустого" инвентари т.к. у тревиса нет доступа к проекту и получить реальный список инсансов невозможно.  
+{
+    "app": {
+        "hosts": [
+            "appserver"
+        ]
+    }, 
+    "db": {
+        "hosts": [
+            "dbserver"
+        ]
+    }
+}
