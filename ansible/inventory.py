@@ -20,8 +20,16 @@ def list_instances(compute, project, zone):
 
 if __name__ == '__main__':
     config = ConfigParser.ConfigParser()   
+    # If ini-file does not exists then render stub inventory
+    try:
+        ini = open('inventory.ini', 'r')        
+    except IOError:
+        out = {'app': {'hosts': ['appserver']},'db': {'hosts': ['dbserver']}}
+        print(json.dumps(out, indent=4, sort_keys=True))
+        quit()
+
     # Get project id and zone frome ini-file.
-    config.read("inventory.ini")  
+    config.read("inventory.ini")
     project = config.get('settings','project') 
     zone = config.get('settings','zone')        
     compute = googleapiclient.discovery.build('compute', 'v1')
@@ -61,7 +69,8 @@ if __name__ == '__main__':
             out[group] = {
             'hosts': groups[group]
         }
-    else: 
+    else:
+        # render stub inventory 
         out = {'app': {'hosts': ['appserver']},'db': {'hosts': ['dbserver']}}
     print(json.dumps(out, indent=4, sort_keys=True))    
 
