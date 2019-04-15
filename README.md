@@ -142,3 +142,26 @@ resource "google_compute_instance" "app-pool" {
 
 # Ansible-1
 - При удалении директории reddit ansible видит, что необходимо привести систему в нужно состояние и клонирует репозиторий. Если директория есть, то ansible ничего не меняет.
+- Файл inventory.py генерируте инвентори используя google-api-python-client, код которого находится в папке ansible/lib. Для работы скрипта необходимо указать ИД проекта и зону в файле inventory.ini (пример конфигурации указан в inventory.ini.example). В файле inventory.json приведен результат работы скрипта. 
+Примерное содержание inventory.json:
+{
+   "_meta": {
+       "hostvars": {
+           <instance-name>: {
+               "ansible_host": <external ip>, 
+               "ansible_user": <user>, 
+               "tags": [<tags>]
+           }           
+       }
+   }, 
+   "app": {
+       "hosts": [
+           <app-instance-name>
+       ]
+   }, 
+   "db": {
+       "hosts": [
+           <db-instance-name>
+       ]
+   }
+}

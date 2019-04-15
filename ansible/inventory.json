@@ -1,0 +1,32 @@
+{
+   "_meta": {
+       "hostvars": {
+           "stage-reddit-app": {
+               "ansible_host": "35.198.105.250", 
+               "ansible_user": "appuser", 
+               "tags": [
+                   "reddit-app", 
+                   "stage"
+               ]
+           }, 
+           "stage-reddit-db": {
+               "ansible_host": "35.242.220.7", 
+               "ansible_user": "appuser", 
+               "tags": [
+                   "reddit-db", 
+                   "stage"
+               ]
+           }
+       }
+   }, 
+   "app": {
+       "hosts": [
+           "stage-reddit-app"
+       ]
+   }, 
+   "db": {
+       "hosts": [
+           "stage-reddit-db"
+       ]
+   }
+}
