@@ -6,4 +6,5 @@
 .terraform/
 inventory.ini
 temp
+*.retry
 

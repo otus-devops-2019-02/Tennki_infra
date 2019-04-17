@@ -48,6 +48,7 @@ if __name__ == '__main__':
             name = instance['name']
             # instance external ip       
             ext_ip = instance['networkInterfaces'][0]['accessConfigs'][0]['natIP']
+            int_ip = instance['networkInterfaces'][0]['networkIP']
             # if find 'app' in instance name then add instance to app group
             if 'app' in name:
                 app_group.append(name)
@@ -61,7 +62,8 @@ if __name__ == '__main__':
             # render host vars
             out['_meta']['hostvars'][str(name)] = {
                 'ansible_host': ext_ip,
-                'ansible_user': ansible_user,
+                'remote_user': ansible_user,
+                'int_ip': int_ip,
                 'tags': tags
                 }
     # render groups
