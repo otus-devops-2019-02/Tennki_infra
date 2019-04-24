@@ -1,6 +1,9 @@
+[![Build Status](https://travis-ci.com/otus-devops-2019-02/Tennki_infra.svg?branch=master)](https://travis-ci.org/otus-devops-2019-02/Tennki_infra)
+
 # Tennki_infra
 Tennki Infra repository
 
+# IP
 bastion_IP = 35.207.181.156
 someinternalhost_IP = 10.156.0.3
 
@@ -187,3 +190,15 @@ resource "google_compute_instance" "app-pool" {
 vars:
     db_host: "{{ groups['db'] | map('extract', hostvars, 'int_ip') | list | join('\n') }}"
 
+# Ansible-3
+- Созданы роли app и db, добавлена коммьюнити роль nginx.
+- Протестирована работа с разными окружениями с использованием ролей.
+- Протестирована работа с ansible vault
+- Дописан скрипт для динамического инвентари для возможности использования с неколькими окружениями. ini-файл (inventory.ini.example) с настройками лежит в директории окружения. Дополнительный библиотеки вынесены в ansible/lib и совместно используются скриптами из разных окружений
+- Написаны скрипты для тестирования run-test.sh, tests.sh и добавлены в travis.
+  run-test.sh - запускает докер контейнер, в котором будут запускаться тесты и запускает скрипт с тестами (tests.sh)
+  tests.sh - описаны сами "тесты". 
+    - Проверка шаблонов пакера
+    - Проверка terraform validate и tflint для окружений prod и stage
+    - Проверка ansible-lint для playbook-ов
+    - Проверка наличия build status-а в README.md

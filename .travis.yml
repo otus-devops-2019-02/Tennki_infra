@@ -2,8 +2,15 @@ dist: trusty
 sudo: required
 language: bash
 before_install:
-- curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-02/run.sh |
-  bash
+  - curl https://raw.githubusercontent.com/express42/otus-homeworks/2019-02/run.sh | bash
+jobs:
+  include:
+    - stage: test
+      name: "Tests"
+      script:
+        - echo "travis_fold:start:Test Script" 
+        - ./run-tests.sh
+        - echo "travis_fold:end:Test Script"      
 notifications:
   slack:
     rooms:

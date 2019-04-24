@@ -1,8 +1,8 @@
-project = "your_project_id"
+project = "infra-000007"
 public_key_path = "~/.ssh/appuser.pub"
 private_key_path = "~/.ssh/appuser"
 disk_image = "reddit-base"
 zone = "europe-west3-a"
 source_ranges = ["10.10.10.10/32"]
 enable_provisoners="1"
-env="prod"
+env="stage"
