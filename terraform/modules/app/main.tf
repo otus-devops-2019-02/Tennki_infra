@@ -2,7 +2,7 @@ resource "google_compute_instance" "app" {
   name         = "${var.env}-reddit-app"
   machine_type = "g1-small"
   zone         = "${var.zone}"
-  tags         = ["reddit-app", "${var.env}"]
+  tags         = ["reddit-app", "${var.env}", "http-server"]
 
   metadata {
     ssh-keys = "appuser:${file(var.public_key_path)}"

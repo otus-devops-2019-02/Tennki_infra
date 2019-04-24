@@ -7,4 +7,6 @@
 inventory.ini
 temp
 *.retry
+jdauphant.nginx
+vault.key
 

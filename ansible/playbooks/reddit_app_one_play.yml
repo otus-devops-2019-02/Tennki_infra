@@ -21,7 +21,7 @@
         dest: /etc/systemd/system/puma.service
       tags: app-tag
       notify: reload puma
-      
+
     - name: Add config for DB connection
       template:
         src: templates/db_config.j2
@@ -32,7 +32,7 @@
       become: true
       systemd: name=puma enabled=yes
       tags: app-tag
-      
+
     - name: Fetch the latest version of application code
       git:
         repo: 'https://github.com/express42/reddit.git'
@@ -40,16 +40,14 @@
         version: monolith
       tags: deploy-tag
       notify: reload puma
-  
+
     - name: Bundle install
       bundler:
         state: present
-        chdir: /home/appuser/reddit      
+        chdir: /home/appuser/reddit
       tags: deploy-tag
-      
-  
-  
-  handlers: 
+
+  handlers:
   - name: restart mongod
     become: true
     service: name=mongod state=restarted
