@@ -202,3 +202,8 @@ vars:
     - Проверка terraform validate и tflint для окружений prod и stage
     - Проверка ansible-lint для playbook-ов
     - Проверка наличия build status-а в README.md
+
+# Ansible-4
+- Для настройки nginx используется файл nginx.yml, который передается как extra_var для группы "app"
+переменная deploy_user также перенесена в файл nginx.yml т.к. последний extra_var переопределяет все предыдущие и нет возможности одновременно указать путь до файла и хэш.
+- Добавлен тест для проверки слушает ли MongoDB порт tcp://0.0.0.0:27017. Использован модуль testinfra socket.
