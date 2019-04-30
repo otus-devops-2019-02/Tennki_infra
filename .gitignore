@@ -17,3 +17,5 @@ vault.key
 .cache
 .pytest_cache
 .venv/
+db/
+
