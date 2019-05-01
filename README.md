@@ -2,6 +2,7 @@
 
 # Tennki_infra
 Tennki Infra repository
+=======================
 
 # IP
 bastion_IP = 35.207.181.156
@@ -19,8 +20,6 @@ Host someinternalhost
     Hostname 10.156.0.3
     Port 22
     ProxyCommand ssh -q -W %h:%p bastion
-
-
 
 testapp_IP = 35.242.220.7
 testapp_port = 9292
@@ -202,3 +201,43 @@ vars:
     - Проверка terraform validate и tflint для окружений prod и stage
     - Проверка ansible-lint для playbook-ов
     - Проверка наличия build status-а в README.md
+
+# Ansible-4
+- Для настройки nginx используется файл nginx.yml, который передается как extra_var для группы "app"
+переменная deploy_user также перенесена в файл nginx.yml т.к. последний extra_var переопределяет все предыдущие и нет возможности одновременно указать путь до файла и хэш.
+- Добавлен тест для проверки слушает ли MongoDB порт tcp://0.0.0.0:27017. Использован модуль testinfra socket.
+- Роль db вынесена в отдельный репозиторий https://github.com/Tennki/ansible-role-db.git
+  - Добавлен в Тревис, настроены оповещения в слак.
+  - Настроена молекула в связке с GCP для тестирования роли.
+  - Роль добавлена в ansible окружения prod и stage для установки из удаленного репозитория 
+
+Краткое руководство по настройке Travis + Molecule + GCE
+# Генерируем ключ для подключения по SSH
+ssh-keygen -t rsa -f google_compute_engine -C 'travis' -q -N ''
+# Создаем ключ в метадате проекта infra в GCP
+
+# Должен быть предварительно создан сервисный аккаунт и скачаны креды (credentials.json)
+Сервисному аккаунту надо добавить роли:
+ Администратор Compute
+ Пользователь сервисного аккаунта
+
+# Должна быть предварительно подключена данная репа в тревисе
+travis encrypt GCE_SERVICE_ACCOUNT_EMAIL='travis-ci@infra-######.iam.gserviceaccount.com' --add
+travis encrypt GCE_CREDENTIALS_FILE="\"\$(pwd)/credentials.json\"" --add
+travis encrypt GCE_PROJECT_ID='infra-######' --add
+
+# шифруем файлы
+tar cvf secrets.tar credentials.json google_compute_engine
+travis login
+travis encrypt-file secrets.tar --add
+
+# пушим и проверяем изменения
+git commit -m 'Added Travis integration'
+git push
+
+# Если не использовать travis encrypt-file для шифрования архива или использовать другую версию openssl, то могут возникнуть проблемы при расшифровке на стороне тревиса. На стороне travis установлена версия 1.0.1f.
+# Можно обойти так. В настройках репозитория создаем ключ travis_key.
+- шифруем у себя: 
+docker run --rm -it -v $(pwd):/export frapsoft/openssl aes-256-cbc -k $travis_key -in /export/try_secrets.tar.enc -out /export/secrets.tar
+- добавляем в travis.yml
+docker run --rm -it -v $(pwd):/export frapsoft/openssl aes-256-cbc -d -k $travis_key -in /export/try_secrets.tar.enc -out /export/secrets.tar
